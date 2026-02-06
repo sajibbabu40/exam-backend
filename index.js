@@ -9,7 +9,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 /* ---------------- CONFIG ---------------- */
-const EXAM_DURATION_SEC = 600; // 10 minutes
+const EXAM_DURATION_SEC = 60; // 1 minutes
 
 /* ---------------- TEST ROUTE ---------------- */
 app.get("/api/test", (req, res) => {
