@@ -43,7 +43,27 @@ app.post("/api/start-exam", (req, res) => {
     durationSec: EXAM_DURATION_SEC,
   });
 });
+/* ---------------- TAB SWITCH LOG ---------------- */
+app.post("/api/tab-switch", (req, res) => {
+  const { examToken } = req.body;
 
+  const attempt = attempts[examToken];
+
+  if (!attempt) {
+    return res.status(400).json({ error: "Invalid token" });
+  }
+
+  if (!attempt.tabSwitchCount) {
+    attempt.tabSwitchCount = 0;
+  }
+
+  attempt.tabSwitchCount += 1;
+
+  res.json({
+    message: "Tab switch logged",
+    tabSwitchCount: attempt.tabSwitchCount,
+  });
+});
 /* ---------------- SUBMIT EXAM ---------------- */
 app.post("/api/submit-exam", (req, res) => {
   const { examToken } = req.body;
