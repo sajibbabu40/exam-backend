@@ -133,3 +133,66 @@ app.post("/api/submit-exam", (req, res) => {
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
 });
+
+/* ---------------- EXAM SCHEMA ---------------- */
+const examSchema = new mongoose.Schema({
+  title: String,
+  durationSec: Number,
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Exam = mongoose.model("Exam", examSchema);
+
+/* ---------------- QUESTION SCHEMA ---------------- */
+const questionSchema = new mongoose.Schema({
+  examId: mongoose.Schema.Types.ObjectId,
+  questionText: String,
+  options: [String],
+  correctAnswer: String,
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Question = mongoose.model("Question", questionSchema);
+
+/* ---------------- CREATE EXAM ---------------- */
+app.post("/api/exams", async (req, res) => {
+  const { title, durationSec } = req.body;
+
+  if (!title || !durationSec) {
+    return res.status(400).json({ error: "title and duration required" });
+  }
+
+  const exam = await Exam.create({ title, durationSec });
+
+  res.json(exam);
+});
+
+/* ---------------- ADD QUESTION ---------------- */
+app.post("/api/questions", async (req, res) => {
+  const { examId, questionText, options, correctAnswer } = req.body;
+
+  if (!examId || !questionText || !options || !correctAnswer) {
+    return res.status(400).json({ error: "missing fields" });
+  }
+
+  const question = await Question.create({
+    examId,
+    questionText,
+    options,
+    correctAnswer
+  });
+
+  res.json(question);
+});
+
+/* ---------------- GET QUESTIONS BY EXAM ---------------- */
+app.get("/api/exams/:examId/questions", async (req, res) => {
+  const { examId } = req.params;
+
+  const questions = await Question.find({ examId });
+
+  res.json(questions);
+});
+
+
+
