@@ -8,15 +8,18 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
+/* ---------------- CONFIG ---------------- */
+const EXAM_DURATION_SEC = 600; // 10 minutes
+
 /* ---------------- TEST ROUTE ---------------- */
 app.get("/api/test", (req, res) => {
   res.json({ message: "Exam backend running" });
 });
 
-/* ---------------- IN-MEMORY STORE (TEMP) ---------------- */
+/* ---------------- IN-MEMORY STORE ---------------- */
 const attempts = {};
 
-/* ---------------- START EXAM API ---------------- */
+/* ---------------- START EXAM ---------------- */
 app.post("/api/start-exam", (req, res) => {
   const { name, email } = req.body;
 
@@ -37,10 +40,11 @@ app.post("/api/start-exam", (req, res) => {
   res.json({
     examToken,
     startTime,
+    durationSec: EXAM_DURATION_SEC,
   });
 });
 
-/* ---------------- SUBMIT EXAM API ---------------- */
+/* ---------------- SUBMIT EXAM ---------------- */
 app.post("/api/submit-exam", (req, res) => {
   const { examToken } = req.body;
 
@@ -55,19 +59,28 @@ app.post("/api/submit-exam", (req, res) => {
   }
 
   const submitTime = Date.now();
-  const durationSec = Math.floor((submitTime - attempt.startTime) / 1000);
+  const elapsedSec = Math.floor((submitTime - attempt.startTime) / 1000);
+
+  // ⛔ time over check
+  if (elapsedSec > EXAM_DURATION_SEC) {
+    attempt.submitted = true;
+    return res.status(403).json({
+      error: "Time over",
+      elapsedSec,
+    });
+  }
 
   attempt.submitted = true;
   attempt.submitTime = submitTime;
-  attempt.durationSec = durationSec;
+  attempt.durationSec = elapsedSec;
 
   res.json({
     message: "Exam submitted",
-    durationSec,
+    durationSec: elapsedSec,
   });
 });
 
-/* ---------------- SERVER START ---------------- */
+/* ---------------- SERVER ---------------- */
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
 });
