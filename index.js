@@ -81,6 +81,35 @@ app.post("/api/submit-exam", (req, res) => {
   const submitTime = Date.now();
   const elapsedSec = Math.floor((submitTime - attempt.startTime) / 1000);
 
+  // ⛔ time over → auto close
+  if (elapsedSec > EXAM_DURATION_SEC) {
+    attempt.submitted = true;
+    attempt.status = "TIME_OVER";
+    attempt.submitTime = submitTime;
+    attempt.durationSec = elapsedSec;
+
+    return res.status(403).json({
+      error: "Time over",
+      status: "TIME_OVER",
+      elapsedSec,
+      tabSwitchCount: attempt.tabSwitchCount || 0,
+    });
+  }
+
+  // ✅ normal submit
+  attempt.submitted = true;
+  attempt.status = "SUBMITTED";
+  attempt.submitTime = submitTime;
+  attempt.durationSec = elapsedSec;
+
+  res.json({
+    message: "Exam submitted",
+    status: "SUBMITTED",
+    durationSec: elapsedSec,
+    tabSwitchCount: attempt.tabSwitchCount || 0,
+  });
+});
+
   // ⛔ time over check
   if (elapsedSec > EXAM_DURATION_SEC) {
     attempt.submitted = true;
